@@ -445,7 +445,7 @@
   function goNext() {
     const answer = surprised ? ['surprise'] : selected;
     sessionStorage.setItem('cuisine', JSON.stringify(answer));
-    alert('Cuisine saved: ' + answer.join(' + ') + '\n\nNext: Q4 — Where to after dinner?');
+    window.location.href = 'whereto-quiz-afterdinner.html';
   }
 </script>
 </body>
