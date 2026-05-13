@@ -382,7 +382,7 @@
       ? { type: 'custom', value: customVal }
       : { type: tierId };
     sessionStorage.setItem('budget', JSON.stringify(budget));
-    alert('🎉 Quiz complete!\n\nAll 5 answers saved:\n• Vibe\n• Location & transport\n• Cuisine\n• After dinner\n• Budget\n\nNext up: generating your date plan on the map!');
+    window.location.href = 'whereto-results.html';
   }
 </script>
 </body>
