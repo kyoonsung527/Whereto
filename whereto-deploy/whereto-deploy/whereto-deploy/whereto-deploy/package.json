@@ -1,0 +1,8 @@
+{
+  "name": "whereto",
+  "version": "1.0.0",
+  "description": "AI-powered date planning app",
+  "engines": {
+    "node": "18.x"
+  }
+}

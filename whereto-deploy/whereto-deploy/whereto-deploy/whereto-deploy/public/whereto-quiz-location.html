@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — Where are you starting?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: rgba(22,163,74,0.10); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: rgba(34,197,94,0.07); bottom: 5%; right: -60px; }
+
+  /* NAV */
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    background: rgba(242,250,244,0.88);
+    backdrop-filter: blur(12px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .back-btn {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .quiz-shell {
+    width: 100%; max-width: 560px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  /* Progress */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; }
+  .progress-track { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--blue-accent); width: 40%; transition: width 0.4s ease; }
+  .progress-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+  /* Question header */
+  .q-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-glow); font-weight: 500; margin-bottom: 0.6rem; }
+  .q-title { font-family: 'DM Serif Display', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -0.02em; line-height: 1.15; color: var(--white); margin-bottom: 0.6rem; }
+  .q-hint { font-size: 0.83rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.5; }
+
+  /* ── GPS BUTTON ── */
+  .gps-btn {
+    width: 100%;
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+    margin-bottom: 0.85rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .gps-btn:hover { border-color: rgba(34,197,94,0.4); background: rgba(22,163,74,0.10); }
+  .gps-btn.detected {
+    border-color: var(--success-border);
+    background: var(--success-bg);
+  }
+  .gps-btn.loading { pointer-events: none; }
+
+  .gps-icon-wrap {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(22,163,74,0.10);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .gps-btn.detected .gps-icon-wrap { background: var(--success-bg); }
+
+  .gps-icon { width: 20px; height: 20px; }
+
+  .gps-text { flex: 1; }
+  .gps-label { font-size: 0.9rem; font-weight: 500; color: var(--white); margin-bottom: 2px; }
+  .gps-sub { font-size: 0.75rem; color: var(--muted); }
+  .gps-btn.detected .gps-sub { color: var(--success); }
+
+  .gps-spinner {
+    width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: var(--blue-glow); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .gps-btn.loading .gps-spinner { display: block; }
+
+  /* ── DIVIDER ── */
+  .or-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 1.25rem 0;
+  }
+  .or-line { flex: 1; height: 0.5px; background: var(--card-border); }
+  .or-text { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── MANUAL INPUT ── */
+  .input-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .input-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px; opacity: 0.5; pointer-events: none;
+  }
+  .location-input {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 12px;
+    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; font-weight: 400;
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .location-input::placeholder { color: var(--muted); }
+  .location-input:focus {
+    border-color: rgba(34,197,94,0.5);
+    background: rgba(22,163,74,0.10);
+  }
+
+  /* Suggestions dropdown */
+  .suggestions {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #f0faf2;
+    border: 0.5px solid rgba(34,197,94,0.25);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 20;
+    display: none;
+  }
+  .suggestions.open { display: block; }
+  .suggestion-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover { background: rgba(22,163,74,0.10); }
+  .sug-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue-glow); flex-shrink: 0; }
+  .sug-name { font-size: 0.85rem; color: var(--white); }
+  .sug-area { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+  /* ── TRANSPORT ── */
+  .transport-label {
+    font-size: 0.78rem; color: var(--muted);
+    margin-bottom: 0.75rem; margin-top: 1.5rem;
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .transport-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 2rem; }
+  .transport-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+  .transport-card:hover { border-color: rgba(34,197,94,0.35); background: rgba(22,163,74,0.10); }
+  .transport-card.selected { border-color: var(--blue-accent); background: rgba(22,163,74,0.10); }
+  .transport-icon { font-size: 1.25rem; }
+  .transport-info {}
+  .transport-name { font-size: 0.875rem; font-weight: 500; color: var(--white); }
+  .transport-range { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+  .transport-card.selected .transport-range { color: #93c5fd; }
+
+  /* ── CONFIRMED LOCATION ── */
+  .location-confirmed {
+    display: none;
+    align-items: center; gap: 12px;
+    background: var(--success-bg);
+    border: 0.5px solid var(--success-border);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .location-confirmed.show { display: flex; }
+  .confirmed-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+  .confirmed-text { font-size: 0.85rem; color: var(--white); flex: 1; }
+  .confirmed-change {
+    font-size: 0.75rem; color: var(--muted);
+    cursor: pointer; text-decoration: underline;
+    text-underline-offset: 2px;
+    background: none; border: none; font-family: inherit;
+  }
+  .confirmed-change:hover { color: var(--white); }
+
+  /* ── NEXT BUTTON ── */
+  .next-btn {
+    width: 100%;
+    background: var(--blue-accent);
+    color: #fff; border: none;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .next-btn:hover:not(:disabled) { background: var(--blue-glow); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(22,163,74,0.35); }
+  .next-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 480px) {
+    nav { padding: 1rem 1.25rem; }
+    .transport-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <button class="back-btn" onclick="window.history.back()">← Back</button>
+</nav>
+
+<main>
+  <div class="quiz-shell">
+
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+      <span class="progress-label">Step 2 of 5</span>
+    </div>
+
+    <div class="q-eyebrow">Question 2</div>
+    <h1 class="q-title">Where are you starting?</h1>
+    <p class="q-hint">We'll build your date route from here — walking or driving distance included.</p>
+
+    <!-- GPS -->
+    <button class="gps-btn" id="gpsBtn" onclick="detectLocation()">
+      <div class="gps-icon-wrap">
+        <svg class="gps-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#3b82f6;">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="gps-text">
+        <div class="gps-label" id="gpsLabel">Use my current location</div>
+        <div class="gps-sub" id="gpsSub">Tap to detect automatically</div>
+      </div>
+      <div class="gps-spinner" id="gpsSpinner"></div>
+    </button>
+
+    <!-- Confirmed location badge -->
+    <div class="location-confirmed" id="confirmedBadge">
+      <div class="confirmed-dot"></div>
+      <div class="confirmed-text" id="confirmedText">Location detected</div>
+      <button class="confirmed-change" onclick="resetLocation()">Change</button>
+    </div>
+
+    <!-- OR divider -->
+    <div class="or-divider" id="orDivider">
+      <div class="or-line"></div>
+      <span class="or-text">or enter manually</span>
+      <div class="or-line"></div>
+    </div>
+
+    <!-- Manual input -->
+    <div class="input-wrap" id="manualWrap">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#7a93c0;">
+        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      <input
+        class="location-input"
+        id="locationInput"
+        type="text"
+        placeholder="e.g. Kensington Market, Toronto"
+        autocomplete="off"
+        oninput="handleInput(this.value)"
+        onfocus="showSuggestions()"
+        onblur="hideSuggestionsDelayed()"
+      />
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <!-- Transport mode -->
+    <div class="transport-label">How are you getting around?</div>
+    <div class="transport-row">
+      <div class="transport-card selected" id="t-walk" onclick="pickTransport('walk')">
+        <span class="transport-icon">🚶</span>
+        <div class="transport-info">
+          <div class="transport-name">Walking</div>
+          <div class="transport-range">Spots within ~2 km</div>
+        </div>
+      </div>
+      <div class="transport-card" id="t-drive" onclick="pickTransport('drive')">
+        <span class="transport-icon">🚗</span>
+        <div class="transport-info">
+          <div class="transport-name">Driving</div>
+          <div class="transport-range">Spots within ~15 km</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" disabled onclick="goNext()">
+      <span id="nextLabel">Set your location to continue</span>
+      <span id="nextArrow" style="display:none;">→</span>
+    </button>
+
+  </div>
+</main>
+
+<script>
+  // ── State ──
+  let locationData = null;
+  let transport = 'walk';
+
+  // ── Fake suggestions (in real app, this calls Google Places Autocomplete) ──
+  const fakePlaces = [
+    { name: 'Kensington Market', area: 'Toronto, ON' },
+    { name: 'Distillery District', area: 'Toronto, ON' },
+    { name: 'Queen Street West', area: 'Toronto, ON' },
+    { name: 'Yorkville', area: 'Toronto, ON' },
+    { name: 'The Annex', area: 'Toronto, ON' },
+    { name: 'Liberty Village', area: 'Toronto, ON' },
+    { name: 'Leslieville', area: 'Toronto, ON' },
+    { name: 'Chinatown', area: 'Toronto, ON' },
+    { name: 'Roncesvalles', area: 'Toronto, ON' },
+    { name: 'Little Italy', area: 'Toronto, ON' },
+  ];
+
+  // ── GPS detection ──
+  function detectLocation() {
+    const btn = document.getElementById('gpsBtn');
+    const spinner = document.getElementById('gpsSpinner');
+    const label = document.getElementById('gpsLabel');
+    const sub = document.getElementById('gpsSub');
+
+    btn.classList.add('loading');
+    spinner.style.display = 'block';
+    label.textContent = 'Detecting your location...';
+    sub.textContent = 'Please allow location access';
+
+    if (!navigator.geolocation) {
+      btn.classList.remove('loading');
+      sub.textContent = 'GPS not supported — please enter manually';
+      spinner.style.display = 'none';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // In real app: reverse geocode lat/lng → address via Google API
+        // Here we simulate a result
+        const simulated = 'Your current location';
+        setLocation(simulated, pos.coords.latitude, pos.coords.longitude, 'gps');
+
+        btn.classList.remove('loading');
+        btn.classList.add('detected');
+        spinner.style.display = 'none';
+        label.textContent = 'Location detected';
+        sub.textContent = simulated;
+      },
+      (err) => {
+        btn.classList.remove('loading');
+        spinner.style.display = 'none';
+        label.textContent = 'Use my current location';
+        sub.textContent = 'Could not detect — please enter manually below';
+      }
+    );
+  }
+
+  // ── Set location ──
+  function setLocation(name, lat, lng, source) {
+    locationData = { name, lat, lng, source };
+    document.getElementById('confirmedBadge').classList.add('show');
+    document.getElementById('confirmedText').textContent = name;
+    document.getElementById('orDivider').style.opacity = '0.4';
+    document.getElementById('manualWrap').style.opacity = '0.4';
+    document.getElementById('manualWrap').style.pointerEvents = 'none';
+    updateNext();
+  }
+
+  // ── Reset location ──
+  function resetLocation() {
+    locationData = null;
+    document.getElementById('confirmedBadge').classList.remove('show');
+    document.getElementById('orDivider').style.opacity = '1';
+    document.getElementById('manualWrap').style.opacity = '1';
+    document.getElementById('manualWrap').style.pointerEvents = 'auto';
+    document.getElementById('locationInput').value = '';
+    const btn = document.getElementById('gpsBtn');
+    btn.classList.remove('detected');
+    document.getElementById('gpsLabel').textContent = 'Use my current location';
+    document.getElementById('gpsSub').textContent = 'Tap to detect automatically';
+    updateNext();
+  }
+
+  // ── Manual input ──
+  function handleInput(val) {
+    if (locationData && locationData.source === 'manual') {
+      locationData = null;
+      updateNext();
+    }
+    const s = document.getElementById('suggestions');
+    if (val.length < 2) { s.classList.remove('open'); return; }
+    const matches = fakePlaces.filter(p =>
+      p.name.toLowerCase().includes(val.toLowerCase())
+    );
+    renderSuggestions(matches.slice(0, 5));
+  }
+
+  function renderSuggestions(places) {
+    const s = document.getElementById('suggestions');
+    if (!places.length) { s.classList.remove('open'); return; }
+    s.innerHTML = places.map(p => `
+      <div class="suggestion-item" onmousedown="pickSuggestion('${p.name}', '${p.area}')">
+        <div class="sug-dot"></div>
+        <div>
+          <div class="sug-name">${p.name}</div>
+          <div class="sug-area">${p.area}</div>
+        </div>
+      </div>
+    `).join('');
+    s.classList.add('open');
+  }
+
+  function pickSuggestion(name, area) {
+    document.getElementById('locationInput').value = name;
+    document.getElementById('suggestions').classList.remove('open');
+    setLocation(`${name}, ${area}`, 43.6532, -79.3832, 'manual');
+  }
+
+  function showSuggestions() {
+    const val = document.getElementById('locationInput').value;
+    if (val.length >= 2) handleInput(val);
+  }
+
+  function hideSuggestionsDelayed() {
+    setTimeout(() => {
+      document.getElementById('suggestions').classList.remove('open');
+    }, 150);
+  }
+
+  // ── Transport ──
+  function pickTransport(mode) {
+    transport = mode;
+    document.getElementById('t-walk').classList.toggle('selected', mode === 'walk');
+    document.getElementById('t-drive').classList.toggle('selected', mode === 'drive');
+  }
+
+  // ── Next button ──
+  function updateNext() {
+    const btn = document.getElementById('nextBtn');
+    const label = document.getElementById('nextLabel');
+    const arrow = document.getElementById('nextArrow');
+    const ready = !!locationData;
+    btn.disabled = !ready;
+    label.textContent = ready ? 'Continue' : 'Set your location to continue';
+    arrow.style.display = ready ? 'inline' : 'none';
+  }
+
+  function goNext() {
+    if (!locationData) return;
+    sessionStorage.setItem('location', JSON.stringify(locationData));
+    sessionStorage.setItem('transport', transport);
+    alert(`Starting from: ${locationData.name}\nTransport: ${transport}\n\nNext question coming soon!`);
+  }
+</script>
+</body>
+</html>
