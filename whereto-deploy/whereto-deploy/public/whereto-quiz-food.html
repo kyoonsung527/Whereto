@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — What are you eating?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: rgba(22,163,74,0.10); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: rgba(34,197,94,0.07); bottom: 5%; right: -60px; }
+
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    background: rgba(242,250,244,0.88);
+    backdrop-filter: blur(12px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .back-btn {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  main {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .quiz-shell {
+    width: 100%; max-width: 600px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; }
+  .progress-track { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--blue-accent); width: 60%; transition: width 0.4s ease; }
+  .progress-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+  .q-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-glow); font-weight: 500; margin-bottom: 0.6rem; }
+  .q-title { font-family: 'DM Serif Display', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -0.02em; line-height: 1.15; color: var(--white); margin-bottom: 0.6rem; }
+  .q-hint { font-size: 0.83rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.5; }
+  .hint-count {
+    display: inline-block;
+    background: rgba(22,163,74,0.10);
+    border: 0.5px solid rgba(34,197,94,0.25);
+    color: var(--blue-glow);
+    font-size: 0.72rem; font-weight: 500;
+    padding: 2px 9px; border-radius: 99px;
+    margin-left: 6px; vertical-align: middle;
+    transition: all 0.2s;
+  }
+
+  /* ── CUISINE GRID ── */
+  .cuisine-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .cuisine-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 14px;
+    padding: 1.1rem 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    user-select: none;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .cuisine-card:hover:not(.disabled) {
+    border-color: rgba(34,197,94,0.35);
+    background: rgba(22,163,74,0.10);
+    transform: translateY(-2px);
+  }
+  .cuisine-card.selected {
+    border-color: var(--blue-accent);
+    background: rgba(22,163,74,0.10);
+  }
+  .cuisine-card.disabled:not(.selected) {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .check-badge {
+    position: absolute; top: 8px; right: 8px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--blue-accent);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .check-badge svg { width: 10px; height: 10px; }
+  .cuisine-card.selected .check-badge { opacity: 1; transform: scale(1); }
+
+  .cuisine-emoji { font-size: 1.75rem; line-height: 1; }
+  .cuisine-name { font-size: 0.82rem; font-weight: 500; color: var(--white); }
+  .cuisine-ex { font-size: 0.7rem; color: var(--muted); line-height: 1.3; }
+
+  /* ── SURPRISE CARD ── */
+  .surprise-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+    margin-bottom: 1.5rem;
+  }
+  .surprise-card:hover { border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.05); }
+  .surprise-card.selected { border-color: var(--gold); background: rgba(245,200,66,0.08); }
+  .surprise-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(245,200,66,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .surprise-card.selected .surprise-icon { background: rgba(245,200,66,0.2); }
+  .surprise-text {}
+  .surprise-label { font-size: 0.9rem; font-weight: 500; color: var(--white); }
+  .surprise-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .surprise-card.selected .surprise-sub { color: var(--gold); }
+
+  /* ── SELECTION SUMMARY ── */
+  .selection-summary {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    min-height: 28px; margin-bottom: 1.25rem;
+  }
+  .sel-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(22,163,74,0.10);
+    border: 0.5px solid rgba(34,197,94,0.3);
+    color: #93c5fd;
+    font-size: 0.75rem; font-weight: 500;
+    padding: 3px 10px; border-radius: 99px;
+    animation: popIn 0.2s ease;
+  }
+  .sel-pill-empty { font-size: 0.75rem; color: var(--muted); padding: 3px 0; opacity: 0.6; }
+
+  /* ── MAX NOTICE ── */
+  .max-notice {
+    text-align: center; font-size: 0.78rem; color: var(--gold);
+    height: 1.1rem; margin-top: -0.5rem; margin-bottom: 0.75rem;
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .max-notice.show { opacity: 1; }
+
+  /* ── NEXT BUTTON ── */
+  .next-btn {
+    width: 100%;
+    background: var(--blue-accent);
+    color: #fff; border: none;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .next-btn:hover:not(:disabled) { background: var(--blue-glow); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(22,163,74,0.35); }
+  .next-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 500px) {
+    .cuisine-grid { grid-template-columns: repeat(2, 1fr); }
+    nav { padding: 1rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <button class="back-btn" onclick="window.history.back()">← Back</button>
+</nav>
+
+<main>
+  <div class="quiz-shell">
+
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+      <span class="progress-label">Step 3 of 5</span>
+    </div>
+
+    <div class="q-eyebrow">Question 3</div>
+    <h1 class="q-title">What's for dinner?</h1>
+    <p class="q-hint">Pick the cuisine you're feeling tonight.
+      <span class="hint-count" id="hintCount">Choose up to 2</span>
+    </p>
+
+    <!-- Selection summary -->
+    <div class="selection-summary" id="summary">
+      <span class="sel-pill-empty">Nothing selected yet</span>
+    </div>
+
+    <!-- Cuisine grid -->
+    <div class="cuisine-grid" id="cuisineGrid">
+
+      <div class="cuisine-card" data-cuisine="Korean" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🥢</span>
+        <div class="cuisine-name">Korean</div>
+        <div class="cuisine-ex">BBQ, bibimbap, hotpot</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Japanese" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🍣</span>
+        <div class="cuisine-name">Japanese</div>
+        <div class="cuisine-ex">Sushi, ramen, izakaya</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Chinese" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🥟</span>
+        <div class="cuisine-name">Chinese</div>
+        <div class="cuisine-ex">Dim sum, noodles, hotpot</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Western" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🥩</span>
+        <div class="cuisine-name">Western</div>
+        <div class="cuisine-ex">Steak, pasta, burgers</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Italian" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🍕</span>
+        <div class="cuisine-name">Italian</div>
+        <div class="cuisine-ex">Pizza, risotto, trattoria</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Mexican" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🌮</span>
+        <div class="cuisine-name">Mexican</div>
+        <div class="cuisine-ex">Tacos, burritos, nachos</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Indian" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🍛</span>
+        <div class="cuisine-name">Indian</div>
+        <div class="cuisine-ex">Curry, tandoor, thali</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Mediterranean" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🫒</span>
+        <div class="cuisine-name">Mediterranean</div>
+        <div class="cuisine-ex">Greek, Lebanese, tapas</div>
+      </div>
+
+      <div class="cuisine-card" data-cuisine="Brunch" onclick="toggleCuisine(this)">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="cuisine-emoji">🥞</span>
+        <div class="cuisine-name">Brunch</div>
+        <div class="cuisine-ex">Eggs, waffles, mimosas</div>
+      </div>
+
+    </div>
+
+    <!-- Max notice -->
+    <div class="max-notice" id="maxNotice">You can only pick 2 cuisines</div>
+
+    <!-- Surprise me -->
+    <div class="surprise-card" id="surpriseCard" onclick="toggleSurprise()">
+      <div class="surprise-icon">✦</div>
+      <div class="surprise-text">
+        <div class="surprise-label">Surprise me</div>
+        <div class="surprise-sub">We'll pick the best match based on your vibe</div>
+      </div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" disabled onclick="goNext()">
+      <span id="nextLabel">Pick a cuisine to continue</span>
+      <span id="nextArrow" style="display:none;">→</span>
+    </button>
+
+  </div>
+</main>
+
+<script>
+  const MAX = 2;
+  let selected = [];
+  let surprised = false;
+
+  function toggleCuisine(card) {
+    if (surprised) return;
+    const cuisine = card.dataset.cuisine;
+    const idx = selected.indexOf(cuisine);
+
+    if (idx > -1) {
+      selected.splice(idx, 1);
+      card.classList.remove('selected');
+    } else {
+      if (selected.length >= MAX) {
+        showMaxNotice();
+        return;
+      }
+      selected.push(cuisine);
+      card.classList.add('selected');
+    }
+    updateUI();
+  }
+
+  function toggleSurprise() {
+    surprised = !surprised;
+    const card = document.getElementById('surpriseCard');
+    card.classList.toggle('selected', surprised);
+
+    if (surprised) {
+      // deselect all cuisines
+      selected = [];
+      document.querySelectorAll('.cuisine-card').forEach(c => {
+        c.classList.remove('selected');
+        c.classList.add('disabled');
+      });
+    } else {
+      document.querySelectorAll('.cuisine-card').forEach(c => {
+        c.classList.remove('disabled');
+      });
+    }
+    updateUI();
+  }
+
+  function showMaxNotice() {
+    const n = document.getElementById('maxNotice');
+    n.classList.add('show');
+    clearTimeout(n._t);
+    n._t = setTimeout(() => n.classList.remove('show'), 2000);
+  }
+
+  function updateUI() {
+    const atMax = selected.length >= MAX;
+
+    if (!surprised) {
+      document.querySelectorAll('.cuisine-card').forEach(c => {
+        const isSel = selected.includes(c.dataset.cuisine);
+        c.classList.toggle('disabled', atMax && !isSel);
+      });
+    }
+
+    const summary = document.getElementById('summary');
+    const hint = document.getElementById('hintCount');
+    const btn = document.getElementById('nextBtn');
+    const label = document.getElementById('nextLabel');
+    const arrow = document.getElementById('nextArrow');
+
+    if (surprised) {
+      summary.innerHTML = '<span class="sel-pill">✦ Surprise me</span>';
+      hint.textContent = 'Auto-selected';
+      hint.style.background = 'rgba(245,200,66,0.12)';
+      hint.style.borderColor = 'rgba(245,200,66,0.3)';
+      hint.style.color = 'var(--gold)';
+    } else if (selected.length === 0) {
+      summary.innerHTML = '<span class="sel-pill-empty">Nothing selected yet</span>';
+      hint.textContent = 'Choose up to 2';
+      hint.style.background = '';
+      hint.style.borderColor = '';
+      hint.style.color = '';
+    } else {
+      summary.innerHTML = selected.map(v => `<span class="sel-pill">✦ ${v}</span>`).join('');
+      hint.textContent = selected.length === 1 ? '1 selected · pick 1 more or continue' : '2 selected';
+      hint.style.background = '';
+      hint.style.borderColor = '';
+      hint.style.color = '';
+    }
+
+    const ready = surprised || selected.length > 0;
+    btn.disabled = !ready;
+    label.textContent = ready ? 'Continue' : 'Pick a cuisine to continue';
+    arrow.style.display = ready ? 'inline' : 'none';
+  }
+
+  function goNext() {
+    const answer = surprised ? ['surprise'] : selected;
+    sessionStorage.setItem('cuisine', JSON.stringify(answer));
+    alert('Cuisine saved: ' + answer.join(' + ') + '\n\nNext: Q4 — Where to after dinner?');
+  }
+</script>
+</body>
+</html>
