@@ -440,7 +440,7 @@
     if (selected.length === 0) return;
     // Save answer and proceed to next question
     sessionStorage.setItem('vibe', JSON.stringify(selected));
-    alert('Vibe saved: ' + selected.join(' + ') + '\n\nNext question coming soon!');
+    window.location.href = 'whereto-quiz-location.html';
   }
 </script>
 </body>
