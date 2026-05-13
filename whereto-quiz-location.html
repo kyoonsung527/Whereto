@@ -524,7 +524,7 @@
     if (!locationData) return;
     sessionStorage.setItem('location', JSON.stringify(locationData));
     sessionStorage.setItem('transport', transport);
-    alert(`Starting from: ${locationData.name}\nTransport: ${transport}\n\nNext question coming soon!`);
+    window.location.href = 'whereto-quiz-food.html';
   }
 </script>
 </body>
