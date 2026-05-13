@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — Plan Your Date</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob {
+    position: fixed; border-radius: 50%;
+    filter: blur(90px); pointer-events: none; z-index: 0;
+  }
+  .blob-1 { width: 500px; height: 500px; background: rgba(22,163,74,0.10); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: rgba(34,197,94,0.07); bottom: 5%; right: -60px; }
+
+  /* NAV */
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    background: rgba(242,250,244,0.88);
+    backdrop-filter: blur(12px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .back-btn {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .quiz-shell {
+    width: 100%; max-width: 600px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  /* Progress */
+  .progress-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 2.5rem;
+  }
+  .progress-track {
+    flex: 1; height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px;
+    background: var(--blue-accent);
+    transition: width 0.4s ease;
+    width: 20%;
+  }
+  .progress-label {
+    font-size: 0.75rem; color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Question */
+  .q-eyebrow {
+    font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--blue-glow);
+    font-weight: 500; margin-bottom: 0.6rem;
+  }
+  .q-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    letter-spacing: -0.02em; line-height: 1.15;
+    color: var(--white); margin-bottom: 0.6rem;
+  }
+  .q-hint {
+    font-size: 0.83rem; color: var(--muted);
+    margin-bottom: 2rem; line-height: 1.5;
+  }
+  .hint-count {
+    display: inline-block;
+    background: rgba(22,163,74,0.10);
+    border: 0.5px solid rgba(34,197,94,0.25);
+    color: var(--blue-glow);
+    font-size: 0.72rem; font-weight: 500;
+    padding: 2px 9px; border-radius: 99px;
+    margin-left: 6px; vertical-align: middle;
+  }
+
+  /* Vibe cards */
+  .vibe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .vibe-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 16px;
+    padding: 1.4rem 1.25rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    user-select: none;
+    overflow: hidden;
+    text-align: left;
+  }
+  .vibe-card:hover:not(.disabled) {
+    border-color: rgba(34,197,94,0.35);
+    background: rgba(22,163,74,0.10);
+    transform: translateY(-2px);
+  }
+  .vibe-card.selected {
+    border-color: var(--blue-accent);
+    background: rgba(22,163,74,0.10);
+  }
+  .vibe-card.disabled:not(.selected) {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* shimmer on selected */
+  .vibe-card.selected::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(22,163,74,0.18), transparent 70%);
+    pointer-events: none;
+  }
+
+  .vibe-emoji {
+    font-size: 1.6rem; margin-bottom: 0.6rem;
+    display: block; line-height: 1;
+  }
+  .vibe-name {
+    font-size: 0.95rem; font-weight: 500;
+    color: var(--white); margin-bottom: 0.25rem;
+  }
+  .vibe-desc {
+    font-size: 0.75rem; color: var(--muted); line-height: 1.45;
+  }
+
+  /* checkmark badge */
+  .check-badge {
+    position: absolute; top: 10px; right: 10px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--blue-accent);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .check-badge svg { width: 11px; height: 11px; }
+  .vibe-card.selected .check-badge { opacity: 1; transform: scale(1); }
+
+  /* max notice */
+  .max-notice {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--gold);
+    height: 1.1rem;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .max-notice.show { opacity: 1; }
+
+  /* Next button */
+  .next-btn {
+    width: 100%;
+    background: var(--blue-accent);
+    color: #fff; border: none;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .next-btn:hover:not(:disabled) {
+    background: var(--blue-glow);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 18px rgba(22,163,74,0.35);
+  }
+  .next-btn:disabled {
+    opacity: 0.35; cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* selected summary pill */
+  .selection-summary {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    min-height: 28px; margin-bottom: 1.25rem;
+  }
+  .sel-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(22,163,74,0.10);
+    border: 0.5px solid rgba(34,197,94,0.3);
+    color: #93c5fd;
+    font-size: 0.75rem; font-weight: 500;
+    padding: 3px 10px; border-radius: 99px;
+    animation: popIn 0.2s ease;
+  }
+  .sel-pill-empty {
+    font-size: 0.75rem; color: var(--muted);
+    padding: 3px 0; opacity: 0.6;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    .vibe-grid { grid-template-columns: 1fr; }
+    nav { padding: 1rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <button class="back-btn" onclick="window.history.back()">← Back</button>
+</nav>
+
+<main>
+  <div class="quiz-shell">
+
+    <!-- Progress -->
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">Step 1 of 5</span>
+    </div>
+
+    <!-- Question -->
+    <div class="q-eyebrow">Question 1</div>
+    <h1 class="q-title">What's the vibe?</h1>
+    <p class="q-hint">Pick what fits your mood tonight.<span class="hint-count" id="hintCount">Choose up to 2</span></p>
+
+    <!-- Selection summary -->
+    <div class="selection-summary" id="summary">
+      <span class="sel-pill-empty">Nothing selected yet</span>
+    </div>
+
+    <!-- Vibe cards -->
+    <div class="vibe-grid">
+
+      <div class="vibe-card" data-vibe="Romantic" onclick="toggleVibe(this)">
+        <div class="check-badge">
+          <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="vibe-emoji">🌹</span>
+        <div class="vibe-name">Romantic</div>
+        <div class="vibe-desc">Candles, wine, and good company. Set the mood.</div>
+      </div>
+
+      <div class="vibe-card" data-vibe="Adventurous" onclick="toggleVibe(this)">
+        <div class="check-badge">
+          <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="vibe-emoji">🧗</span>
+        <div class="vibe-name">Adventurous</div>
+        <div class="vibe-desc">Try something new. Push the comfort zone together.</div>
+      </div>
+
+      <div class="vibe-card" data-vibe="Chill & Cozy" onclick="toggleVibe(this)">
+        <div class="check-badge">
+          <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="vibe-emoji">☕</span>
+        <div class="vibe-name">Chill & Cozy</div>
+        <div class="vibe-desc">Low energy, warm spaces, great conversations.</div>
+      </div>
+
+      <div class="vibe-card" data-vibe="Fun & Playful" onclick="toggleVibe(this)">
+        <div class="check-badge">
+          <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="vibe-emoji">🎉</span>
+        <div class="vibe-name">Fun & Playful</div>
+        <div class="vibe-desc">Laughs, games, and zero pressure. Keep it light.</div>
+      </div>
+
+      <div class="vibe-card" style="grid-column: span 2;" data-vibe="Cultural" onclick="toggleVibe(this)">
+        <div class="check-badge">
+          <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="vibe-emoji">🎨</span>
+        <div class="vibe-name">Cultural</div>
+        <div class="vibe-desc">Museums, galleries, live music, theatre — feed the mind.</div>
+      </div>
+
+    </div>
+
+    <!-- Max notice -->
+    <div class="max-notice" id="maxNotice">You can only pick 2 vibes</div>
+
+    <!-- Next -->
+    <button class="next-btn" id="nextBtn" disabled onclick="goNext()">
+      <span id="nextLabel">Select a vibe to continue</span>
+      <span id="nextArrow" style="display:none;">→</span>
+    </button>
+
+  </div>
+</main>
+
+<script>
+  const MAX = 2;
+  let selected = [];
+
+  function toggleVibe(card) {
+    const vibe = card.dataset.vibe;
+    const idx = selected.indexOf(vibe);
+
+    if (idx > -1) {
+      selected.splice(idx, 1);
+      card.classList.remove('selected');
+    } else {
+      if (selected.length >= MAX) {
+        showMaxNotice();
+        return;
+      }
+      selected.push(vibe);
+      card.classList.add('selected');
+    }
+
+    updateUI();
+  }
+
+  function showMaxNotice() {
+    const n = document.getElementById('maxNotice');
+    n.classList.add('show');
+    clearTimeout(n._t);
+    n._t = setTimeout(() => n.classList.remove('show'), 2000);
+  }
+
+  function updateUI() {
+    const cards = document.querySelectorAll('.vibe-card');
+    const atMax = selected.length >= MAX;
+
+    cards.forEach(c => {
+      const isSelected = selected.includes(c.dataset.vibe);
+      c.classList.toggle('disabled', atMax && !isSelected);
+    });
+
+    const summary = document.getElementById('summary');
+    if (selected.length === 0) {
+      summary.innerHTML = '<span class="sel-pill-empty">Nothing selected yet</span>';
+    } else {
+      summary.innerHTML = selected.map(v => `<span class="sel-pill">✦ ${v}</span>`).join('');
+    }
+
+    const btn = document.getElementById('nextBtn');
+    const label = document.getElementById('nextLabel');
+    const arrow = document.getElementById('nextArrow');
+    const hint = document.getElementById('hintCount');
+
+    btn.disabled = selected.length === 0;
+
+    if (selected.length === 0) {
+      label.textContent = 'Select a vibe to continue';
+      arrow.style.display = 'none';
+      hint.textContent = 'Choose up to 2';
+    } else if (selected.length === 1) {
+      label.textContent = 'Continue';
+      arrow.style.display = 'inline';
+      hint.textContent = '1 selected · pick 1 more or continue';
+    } else {
+      label.textContent = 'Continue';
+      arrow.style.display = 'inline';
+      hint.textContent = '2 selected';
+    }
+  }
+
+  function goNext() {
+    if (selected.length === 0) return;
+    // Save answer and proceed to next question
+    sessionStorage.setItem('vibe', JSON.stringify(selected));
+    alert('Vibe saved: ' + selected.join(' + ') + '\n\nNext question coming soon!');
+  }
+</script>
+</body>
+</html>

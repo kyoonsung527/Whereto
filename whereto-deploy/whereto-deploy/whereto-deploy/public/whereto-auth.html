@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — Sign in</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.06) 1px, transparent 1px);
+    background-size: 52px 52px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 550px; height: 550px; background: rgba(22,163,74,0.10); top: -150px; left: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: rgba(34,197,94,0.07); bottom: -80px; right: -80px; }
+
+  /* ── NAV ── */
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 2.5rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    background: rgba(242,250,244,0.88);
+    backdrop-filter: blur(14px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .back-btn {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  /* ── MAIN ── */
+  main {
+    position: relative; z-index: 1;
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .auth-shell {
+    width: 100%; max-width: 420px;
+    animation: fadeUp 0.45s ease both;
+  }
+
+  /* ── TABS ── */
+  .tab-row {
+    display: flex; gap: 0;
+    background: var(--card-bg);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 12px; padding: 4px;
+    margin-bottom: 2rem;
+  }
+  .tab-btn {
+    flex: 1; padding: 0.55rem;
+    border: none; background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 400;
+    color: var(--muted); border-radius: 9px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--blue-accent);
+    color: #fff; font-weight: 500;
+    box-shadow: 0 0 16px rgba(22,163,74,0.3);
+  }
+
+  /* ── FORM PANELS ── */
+  .panel { display: none; animation: fadeUp 0.3s ease both; }
+  .panel.show { display: block; }
+
+  .panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; letter-spacing: -0.02em;
+    color: var(--white); margin-bottom: 0.4rem;
+  }
+  .panel-sub {
+    font-size: 0.82rem; color: var(--muted);
+    margin-bottom: 1.75rem; line-height: 1.5;
+  }
+
+  /* ── SOCIAL BUTTONS ── */
+  .social-row { display: flex; gap: 10px; margin-bottom: 1.25rem; }
+  .social-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 10px; padding: 0.7rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--white);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .social-btn:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+  .social-icon { font-size: 1rem; }
+
+  .divider-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem;
+  }
+  .div-line { flex: 1; height: 0.5px; background: var(--card-border); }
+  .div-text { font-size: 0.72rem; color: var(--muted); }
+
+  /* ── INPUTS ── */
+  .field { margin-bottom: 12px; }
+  .field-label {
+    font-size: 0.75rem; color: var(--muted);
+    display: block; margin-bottom: 6px; letter-spacing: 0.03em;
+  }
+  .field-wrap { position: relative; }
+  .field-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 0.9rem; opacity: 0.45; pointer-events: none;
+  }
+  .field-input {
+    width: 100%;
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 10px; padding: 0.78rem 1rem 0.78rem 2.5rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    color: var(--white); outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field-input::placeholder { color: var(--muted); }
+  .field-input:focus { border-color: rgba(34,197,94,0.5); background: rgba(22,163,74,0.10); }
+  .field-input.error { border-color: rgba(248,113,113,0.5); }
+
+  .pw-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 0.78rem; transition: color 0.2s;
+  }
+  .pw-toggle:hover { color: var(--white); }
+
+  .field-error {
+    font-size: 0.72rem; color: var(--error);
+    margin-top: 4px; display: none;
+  }
+  .field-error.show { display: block; }
+
+  /* password strength */
+  .pw-strength { margin-top: 6px; display: none; }
+  .pw-strength.show { display: block; }
+  .pw-bars { display: flex; gap: 4px; margin-bottom: 3px; }
+  .pw-bar { flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,0.08); transition: background 0.3s; }
+  .pw-bar.weak { background: var(--error); }
+  .pw-bar.medium { background: var(--gold); }
+  .pw-bar.strong { background: var(--success); }
+  .pw-label { font-size: 0.68rem; color: var(--muted); }
+
+  /* name row */
+  .name-row { display: flex; gap: 10px; }
+  .name-row .field { flex: 1; }
+
+  /* terms */
+  .terms-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 1.25rem; margin-top: 4px;
+  }
+  .terms-check {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1px solid rgba(22,163,74,0.15); background: var(--card-bg);
+    cursor: pointer; flex-shrink: 0; margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .terms-check.checked { background: var(--blue-accent); border-color: var(--blue-accent); }
+  .terms-check.checked::after { content: '✓'; font-size: 0.6rem; color: #fff; }
+  .terms-text { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+  .terms-text a { color: var(--blue-glow); text-decoration: none; }
+
+  /* forgot pw */
+  .forgot { text-align: right; margin-top: -6px; margin-bottom: 1.25rem; }
+  .forgot a { font-size: 0.75rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .forgot a:hover { color: var(--white); }
+
+  /* submit btn */
+  .submit-btn {
+    width: 100%; background: var(--blue-accent); color: #fff; border: none;
+    padding: 0.88rem; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative; overflow: hidden;
+  }
+  .submit-btn:hover { background: var(--blue-glow); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(22,163,74,0.35); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* success state */
+  .success-msg {
+    display: none; text-align: center; padding: 2rem 0;
+    animation: fadeUp 0.4s ease both;
+  }
+  .success-msg.show { display: block; }
+  .success-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .success-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--white); margin-bottom: 0.5rem; }
+  .success-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  @media (max-width: 480px) {
+    nav { padding: 0.9rem 1.1rem; }
+    .name-row { flex-direction: column; gap: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto-home.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <a class="back-btn" href="whereto-home.html">← Back to home</a>
+</nav>
+
+<main>
+  <div class="auth-shell">
+
+    <!-- TABS -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign in</button>
+      <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div class="panel show" id="panel-login">
+      <div class="panel-title">Welcome back</div>
+      <div class="panel-sub">Sign in to see your saved courses and community posts.</div>
+
+      <div class="social-row">
+        <button class="social-btn"><span class="social-icon">G</span> Google</button>
+        <button class="social-btn"><span class="social-icon">𝕏</span> Twitter / X</button>
+      </div>
+
+      <div class="divider-row">
+        <div class="div-line"></div>
+        <span class="div-text">or continue with email</span>
+        <div class="div-line"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <span class="field-icon">✉</span>
+          <input class="field-input" id="login-email" type="email" placeholder="you@example.com" oninput="clearErr('login-email-err')">
+        </div>
+        <div class="field-error" id="login-email-err">Please enter a valid email</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <span class="field-icon">🔒</span>
+          <input class="field-input" id="login-pw" type="password" placeholder="Your password" oninput="clearErr('login-pw-err')">
+          <button class="pw-toggle" onclick="togglePw('login-pw', this)">Show</button>
+        </div>
+        <div class="field-error" id="login-pw-err">Password is required</div>
+      </div>
+
+      <div class="forgot"><a href="#">Forgot password?</a></div>
+
+      <button class="submit-btn" onclick="doLogin()">Sign in →</button>
+
+      <div class="success-msg" id="login-success">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">You're in!</div>
+        <div class="success-sub">Welcome back. Taking you to your profile...</div>
+        <button class="submit-btn" onclick="window.location.href='whereto-mypage.html'">Go to my page →</button>
+      </div>
+    </div>
+
+    <!-- SIGNUP PANEL -->
+    <div class="panel" id="panel-signup">
+      <div class="panel-title">Join Whereto</div>
+      <div class="panel-sub">Create an account to save courses and share your date stories.</div>
+
+      <div class="social-row">
+        <button class="social-btn"><span class="social-icon">G</span> Google</button>
+        <button class="social-btn"><span class="social-icon">𝕏</span> Twitter / X</button>
+      </div>
+
+      <div class="divider-row">
+        <div class="div-line"></div>
+        <span class="div-text">or sign up with email</span>
+        <div class="div-line"></div>
+      </div>
+
+      <div class="name-row">
+        <div class="field">
+          <label class="field-label">First name</label>
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input class="field-input" id="su-first" type="text" placeholder="Alex" oninput="clearErr('su-first-err')">
+          </div>
+          <div class="field-error" id="su-first-err">Required</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Last name</label>
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input class="field-input" id="su-last" type="text" placeholder="Kim" oninput="clearErr('su-last-err')">
+          </div>
+          <div class="field-error" id="su-last-err">Required</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <span class="field-icon">✉</span>
+          <input class="field-input" id="su-email" type="email" placeholder="you@example.com" oninput="clearErr('su-email-err')">
+        </div>
+        <div class="field-error" id="su-email-err">Please enter a valid email</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <span class="field-icon">🔒</span>
+          <input class="field-input" id="su-pw" type="password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)">
+          <button class="pw-toggle" onclick="togglePw('su-pw', this)">Show</button>
+        </div>
+        <div class="pw-strength" id="pw-strength">
+          <div class="pw-bars">
+            <div class="pw-bar" id="bar1"></div>
+            <div class="pw-bar" id="bar2"></div>
+            <div class="pw-bar" id="bar3"></div>
+          </div>
+          <div class="pw-label" id="pw-label">Too short</div>
+        </div>
+        <div class="field-error" id="su-pw-err">Password must be at least 8 characters</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">City</label>
+        <div class="field-wrap">
+          <span class="field-icon">📍</span>
+          <select class="field-input" id="su-city" style="padding-left:2.5rem;cursor:pointer;">
+            <option value="">Select your city...</option>
+            <option>Toronto</option>
+            <option>Vancouver</option>
+            <option>Montreal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="terms-row">
+        <div class="terms-check" id="termsCheck" onclick="toggleTerms()"></div>
+        <div class="terms-text">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></div>
+      </div>
+
+      <button class="submit-btn" id="su-btn" onclick="doSignup()">Create my account →</button>
+
+      <div class="success-msg" id="signup-success">
+        <div class="success-icon">✨</div>
+        <div class="success-title">Account created!</div>
+        <div class="success-sub">Welcome to Whereto. Your first date plan is waiting.</div>
+        <button class="submit-btn" onclick="window.location.href='whereto-mypage.html'">Go to my page →</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  let termsChecked = false;
+
+  function switchTab(tab) {
+    document.getElementById('panel-login').classList.toggle('show', tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('show', tab === 'signup');
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    // hide success msgs
+    document.getElementById('login-success').classList.remove('show');
+    document.getElementById('signup-success').classList.remove('show');
+  }
+
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+  }
+
+  function clearErr(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+    const input = el.previousElementSibling?.querySelector('.field-input') || document.getElementById(id.replace('-err',''));
+    if (input) input.classList.remove('error');
+  }
+
+  function showErr(errId, inputId) {
+    document.getElementById(errId).classList.add('show');
+    document.getElementById(inputId).classList.add('error');
+  }
+
+  function checkStrength(val) {
+    const strength = document.getElementById('pw-strength');
+    const b1 = document.getElementById('bar1');
+    const b2 = document.getElementById('bar2');
+    const b3 = document.getElementById('bar3');
+    const lbl = document.getElementById('pw-label');
+
+    if (val.length === 0) { strength.classList.remove('show'); return; }
+    strength.classList.add('show');
+
+    const score = (val.length >= 8 ? 1 : 0) + (/[A-Z]/.test(val) ? 1 : 0) + (/[0-9!@#$%]/.test(val) ? 1 : 0);
+
+    [b1,b2,b3].forEach(b => b.className = 'pw-bar');
+    if (score === 1) { b1.classList.add('weak'); lbl.textContent = 'Weak'; }
+    else if (score === 2) { b1.classList.add('medium'); b2.classList.add('medium'); lbl.textContent = 'Medium'; }
+    else { b1.classList.add('strong'); b2.classList.add('strong'); b3.classList.add('strong'); lbl.textContent = 'Strong'; }
+  }
+
+  function toggleTerms() {
+    termsChecked = !termsChecked;
+    document.getElementById('termsCheck').classList.toggle('checked', termsChecked);
+  }
+
+  function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pw = document.getElementById('login-pw').value;
+    let valid = true;
+    if (!email || !email.includes('@')) { showErr('login-email-err','login-email'); valid = false; }
+    if (!pw) { showErr('login-pw-err','login-pw'); valid = false; }
+    if (!valid) return;
+    // simulate success
+    document.querySelector('#panel-login .panel-title').style.display = 'none';
+    document.querySelector('#panel-login .panel-sub').style.display = 'none';
+    document.querySelector('#panel-login .social-row').style.display = 'none';
+    document.querySelector('#panel-login .divider-row').style.display = 'none';
+    document.querySelectorAll('#panel-login .field').forEach(f => f.style.display = 'none');
+    document.querySelector('#panel-login .forgot').style.display = 'none';
+    document.querySelector('#panel-login .submit-btn').style.display = 'none';
+    document.getElementById('login-success').classList.add('show');
+  }
+
+  function doSignup() {
+    const first = document.getElementById('su-first').value.trim();
+    const last = document.getElementById('su-last').value.trim();
+    const email = document.getElementById('su-email').value.trim();
+    const pw = document.getElementById('su-pw').value;
+    let valid = true;
+    if (!first) { showErr('su-first-err','su-first'); valid = false; }
+    if (!last) { showErr('su-last-err','su-last'); valid = false; }
+    if (!email || !email.includes('@')) { showErr('su-email-err','su-email'); valid = false; }
+    if (pw.length < 8) { showErr('su-pw-err','su-pw'); valid = false; }
+    if (!termsChecked) { alert('Please agree to the Terms of Service to continue.'); valid = false; }
+    if (!valid) return;
+    // simulate success
+    document.querySelector('#panel-signup .panel-title').style.display = 'none';
+    document.querySelector('#panel-signup .panel-sub').style.display = 'none';
+    document.querySelector('#panel-signup .social-row').style.display = 'none';
+    document.querySelector('#panel-signup .divider-row').style.display = 'none';
+    document.querySelectorAll('#panel-signup .field').forEach(f => f.style.display = 'none');
+    document.querySelector('#panel-signup .name-row').style.display = 'none';
+    document.querySelector('#panel-signup .terms-row').style.display = 'none';
+    document.getElementById('su-btn').style.display = 'none';
+    document.getElementById('signup-success').classList.add('show');
+  }
+</script>
+</body>
+</html>
