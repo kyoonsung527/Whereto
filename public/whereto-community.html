@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — Community</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.05) 1px, transparent 1px);
+    background-size: 52px 52px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: rgba(22,163,74,0.10); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: rgba(34,197,94,0.07); bottom: 20%; right: -80px; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 2.5rem;
+    background: rgba(242,250,244,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .btn-nav {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.42rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-nav:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+  .btn-share {
+    background: var(--blue-accent); color: #fff; border: none;
+    padding: 0.42rem 1.1rem; border-radius: 99px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-share:hover { background: var(--blue-glow); transform: translateY(-1px); }
+
+  /* ══ GRID VIEW ══ */
+  #gridView {
+    position: relative; z-index: 1;
+    padding: 5.5rem 1.5rem 4rem;
+    max-width: 1200px; margin: 0 auto;
+  }
+
+  .grid-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .grid-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    letter-spacing: -0.02em; color: var(--white);
+  }
+  .grid-sub { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+  .filter-bar { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.75rem; }
+  .fc {
+    padding: 0.38rem 0.95rem; border-radius: 99px;
+    border: 1px solid rgba(22,163,74,0.15); background: var(--card-bg);
+    font-size: 0.78rem; color: var(--muted);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .fc:hover { border-color: rgba(34,197,94,0.35); color: var(--white); }
+  .fc.on { background: var(--blue-accent); border-color: var(--blue-accent); color: #fff; }
+
+  /* masonry grid */
+  .photo-grid { columns: 3; column-gap: 12px; }
+  @media (max-width: 900px) { .photo-grid { columns: 2; } }
+  @media (max-width: 500px) { .photo-grid { columns: 1; } }
+
+  .grid-card {
+    break-inside: avoid; margin-bottom: 12px;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(22,163,74,0.15);
+    cursor: pointer; position: relative;
+    transition: transform 0.2s, border-color 0.2s;
+    background: var(--navy-mid);
+  }
+  .grid-card:hover { transform: translateY(-3px); border-color: rgba(34,197,94,0.3); }
+
+  .card-thumb {
+    width: 100%; display: block;
+    position: relative;
+  }
+  .card-thumb-bg { width: 100%; display: block; }
+
+  .google-strip {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(242,250,244,0.72);
+    font-size: 0.6rem; color: rgba(240,244,255,0.45);
+    padding: 3px 8px; text-align: right;
+  }
+
+  .card-bottom { padding: 0.85rem 0.9rem 0.8rem; }
+  .card-title { font-size: 0.87rem; font-weight: 500; color: var(--white); margin-bottom: 6px; line-height: 1.3; }
+  .card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card-avatar {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem; font-weight: 500; flex-shrink: 0;
+  }
+  .card-author { font-size: 0.7rem; color: var(--muted); }
+  .card-sep { color: var(--card-border); font-size: 0.5rem; }
+  .card-city { font-size: 0.68rem; color: var(--muted); }
+  .card-likes { margin-left: auto; font-size: 0.7rem; color: var(--muted); }
+  .card-vibe { display: inline-block; margin-top: 6px; font-size: 0.65rem; padding: 2px 8px; border-radius: 99px; border: 0.5px solid rgba(34,197,94,0.25); color: var(--blue-glow); background: rgba(22,163,74,0.10); }
+
+  /* ══ DETAIL VIEW ══ */
+  #detailView {
+    display: none;
+    position: relative; z-index: 1;
+    max-width: 760px; margin: 0 auto;
+    padding: 5.5rem 1.5rem 5rem;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; color: var(--muted);
+    cursor: pointer; margin-bottom: 1.75rem; transition: color 0.2s;
+    background: none; border: none; font-family: inherit;
+  }
+  .back-btn:hover { color: var(--white); }
+
+  /* hero image */
+  .d-hero {
+    width: 100%; border-radius: 18px; overflow: hidden;
+    margin-bottom: 8px; border: 1px solid rgba(22,163,74,0.15);
+    aspect-ratio: 16/7; display: block;
+  }
+
+  .d-google-notice {
+    font-size: 0.68rem; color: rgba(240,244,255,0.35);
+    margin-bottom: 1.25rem; display: flex; align-items: center; gap: 5px;
+  }
+
+  /* secondary photos */
+  .d-photos-row {
+    display: flex; gap: 8px; margin-bottom: 1.5rem;
+  }
+  .d-photo-sm {
+    flex: 1; border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(22,163,74,0.15); aspect-ratio: 4/3;
+  }
+
+  /* author */
+  .d-author-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    flex-wrap: wrap;
+  }
+  .d-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 500; flex-shrink: 0;
+  }
+  .d-name { font-size: 0.9rem; font-weight: 500; color: var(--white); }
+  .d-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .d-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .dtag { font-size: 0.7rem; padding: 2px 9px; border-radius: 99px; border: 1px solid rgba(22,163,74,0.15); color: var(--muted); }
+  .dtag.v { border-color: rgba(34,197,94,0.3); color: var(--blue-glow); background: rgba(22,163,74,0.10); }
+
+  /* course strip */
+  .d-course {
+    background: rgba(22,163,74,0.10); border: 0.5px solid rgba(34,197,94,0.15);
+    border-radius: 14px; padding: 0.9rem 1.1rem; margin-bottom: 1.75rem;
+  }
+  .d-course-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue-glow); margin-bottom: 0.65rem; }
+  .d-stops { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .d-stop-item { display: flex; align-items: center; gap: 4px; }
+  .d-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .d-sname { font-size: 0.77rem; color: rgba(240,244,255,0.8); }
+  .d-stype { font-size: 0.67rem; color: var(--muted); }
+  .d-arrow { font-size: 0.6rem; color: var(--muted); margin: 0 2px; }
+
+  /* blog title & body */
+  .d-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+    letter-spacing: -0.02em; color: var(--white);
+    line-height: 1.2; margin-bottom: 1.25rem;
+  }
+  .d-body { font-size: 0.9rem; color: rgba(240,244,255,0.7); line-height: 1.85; }
+  .d-body p { margin-bottom: 1rem; }
+  .d-body p:last-child { margin-bottom: 0; }
+
+  /* reactions */
+  .reactions {
+    margin-top: 3rem; padding-top: 1.75rem;
+    border-top: 0.5px solid var(--card-border);
+  }
+  .reaction-row { display: flex; gap: 10px; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; }
+  .like-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 99px; padding: 0.5rem 1.25rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--white);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .like-btn:hover { border-color: rgba(244,114,182,0.4); background: rgba(244,114,182,0.08); }
+  .like-btn.liked { border-color: #f472b6; background: rgba(244,114,182,0.12); color: #f9a8d4; }
+  .save-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 99px; padding: 0.5rem 1.25rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--white);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .save-btn:hover { border-color: rgba(245,200,66,0.4); }
+  .save-btn.saved { border-color: var(--gold); color: var(--gold); }
+  .rating-pill { margin-left: auto; font-size: 0.82rem; color: var(--gold); }
+
+  /* comments */
+  .comments-label { font-size: 0.85rem; font-weight: 500; color: var(--white); margin-bottom: 1.25rem; }
+  .comment { display: flex; gap: 12px; margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid rgba(22,163,74,0.15); }
+  .comment:last-of-type { border-bottom: none; }
+  .c-av { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 500; flex-shrink: 0; margin-top: 2px; }
+  .c-name { font-size: 0.78rem; font-weight: 500; color: var(--white); }
+  .c-time { font-size: 0.68rem; color: var(--muted); margin-left: 6px; }
+  .c-text { font-size: 0.8rem; color: rgba(240,244,255,0.62); line-height: 1.6; margin-top: 3px; }
+
+  /* comment input */
+  .c-input-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 1.25rem; }
+  .c-input-av { width: 30px; height: 30px; border-radius: 50%; background: rgba(22,163,74,0.10); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #93c5fd; }
+  .c-input-wrap { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .c-textarea { width: 100%; background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15); border-radius: 12px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; color: var(--white); outline: none; resize: none; }
+  .c-textarea::placeholder { color: var(--muted); }
+  .c-textarea:focus { border-color: rgba(34,197,94,0.4); }
+  .c-submit { align-self: flex-end; background: var(--blue-accent); color: #fff; border: none; padding: 0.45rem 1.2rem; border-radius: 99px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .c-submit:hover { background: var(--blue-glow); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @media (max-width: 600px) {
+    nav { padding: 0.9rem 1.1rem; }
+    .d-photos-row { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto-home.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <div class="nav-right">
+    <a class="btn-nav" href="whereto-home.html">← Home</a>
+    <a class="btn-nav" href="whereto-quiz.html">Plan a date</a>
+    <button class="btn-share" onclick="showShareModal()">+ Share my date</button>
+  </div>
+</nav>
+
+<!-- GRID VIEW -->
+<div id="gridView">
+  <div class="grid-header">
+    <div>
+      <div class="grid-heading">Community</div>
+      <div class="grid-sub">847 date stories — tap any photo to read</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="fc on" onclick="setF(this)">All</div>
+    <div class="fc" onclick="setF(this)">🌹 Romantic</div>
+    <div class="fc" onclick="setF(this)">🧗 Adventurous</div>
+    <div class="fc" onclick="setF(this)">☕ Chill & Cozy</div>
+    <div class="fc" onclick="setF(this)">🎉 Fun & Playful</div>
+    <div class="fc" onclick="setF(this)">🎨 Cultural</div>
+  </div>
+
+  <div class="photo-grid" id="photoGrid"></div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detailView">
+  <button class="back-btn" onclick="backToGrid()">← Back to community</button>
+  <div id="detailContent"></div>
+</div>
+
+<!-- SHARE MODAL -->
+<div id="shareModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(242,250,244,0.96);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:#f0faf2;border:0.5px solid var(--card-border);border-radius:20px;padding:2rem;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--white);">Share your date</div>
+      <button onclick="hideShareModal()" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;">✕</button>
+    </div>
+    <input type="text" placeholder="Give your date a title..." style="width:100%;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:10px;padding:0.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--white);outline:none;margin-bottom:10px;">
+    <textarea placeholder="Tell your story..." rows="5" style="width:100%;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:10px;padding:0.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--white);outline:none;resize:vertical;margin-bottom:10px;"></textarea>
+    <div style="border:0.5px dashed var(--card-border);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;margin-bottom:10px;color:var(--muted);font-size:0.82rem;">
+      📷 Upload photos (up to 5)<br>
+      <span style="font-size:0.7rem;display:block;margin-top:4px;color:rgba(122,147,192,0.7);">No photos? We'll use Google Places images of your spots</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select style="flex:1;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:10px;padding:0.65rem;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--white);outline:none;min-width:120px;">
+        <option>Vibe...</option><option>🌹 Romantic</option><option>🧗 Adventurous</option><option>☕ Chill & Cozy</option><option>🎉 Fun & Playful</option><option>🎨 Cultural</option>
+      </select>
+      <select style="flex:1;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:10px;padding:0.65rem;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--white);outline:none;min-width:100px;">
+        <option>City...</option><option>Toronto</option><option>Vancouver</option><option>Montreal</option>
+      </select>
+      <select style="flex:1;background:var(--card-bg);border:0.5px solid var(--card-border);border-radius:10px;padding:0.65rem;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--white);outline:none;min-width:100px;">
+        <option>Rating...</option><option>★★★★★</option><option>★★★★☆</option><option>★★★☆☆</option>
+      </select>
+    </div>
+    <button style="width:100%;background:var(--blue-accent);color:#fff;border:none;padding:0.85rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;" onmouseover="this.style.background='var(--blue-glow)'" onmouseout="this.style.background='var(--blue-accent)'">Post your story →</button>
+  </div>
+</div>
+
+<script>
+const posts = [
+  { id:0, title:"We followed the Candlelit Evening course and I nearly cried (in the best way)", author:"jay_and_lily", initials:"JL", avBg:"rgba(22,163,74,0.25)", avColor:"#93c5fd", city:"Toronto", vibe:"🌹 Romantic", food:"🍝 Italian", budget:"$30–$70", rating:"5.0", likes:142, isGoogle:false,
+    colors:["linear-gradient(135deg,#bbf7d0 0%,#dcfce7 60%,#f0fdf4 100%)","linear-gradient(135deg,#e9d5ff 0%,#f3e8ff 60%,#faf5ff 100%)","linear-gradient(135deg,#bae6fd 0%,#e0f2fe 60%,#f0f9ff 100%)"],
+    heights:[220,150,140],
+    course:[{n:"Enoteca Sociale",t:"Dinner",c:"#2563eb"},{n:"Bar Raval",t:"Cocktails",c:"#2563eb"},{n:"Sicilian Café",t:"Dessert",c:"#2563eb"},{n:"Trinity Bellwoods",t:"Stroll",c:"#2563eb"}],
+    body:`<p>Okay I'm not usually the type to write these but this date was so good I had to.</p><p>We picked Romantic + Italian on Whereto and it gave us this course and I didn't change a single thing. Enoteca Sociale first — tiny, exposed brick, the lighting was perfect. We shared the cacio e pepe and a bottle of Vermentino and talked for almost two hours without realizing it.</p><p>Then Bar Raval. I'd never been and oh my god — all these sweeping mahogany curves, amber light everywhere. We had one cocktail each and neither of us wanted to leave.</p><p>Ended at Sicilian for gelato on the patio, then walked through Trinity Bellwoods at 10:30pm. The park was completely quiet. That's when she told me she loved me for the first time.</p><p>So yeah. Use Whereto.</p>`,
+    comments:[{initials:"MK",bg:"rgba(245,200,66,0.18)",tc:"#f5c842",name:"mikaela_v",time:"1 day ago",text:"This made me tear up honestly. The park at night is just something else."},{initials:"TK",bg:"rgba(167,139,250,0.2)",tc:"#c4b5fd",name:"theo_k",time:"2 days ago",text:"Bar Raval is absolutely the right call for that second stop. Iconic spot."}]
+  },
+  { id:1, title:"Golden hour + sushi + seawall — the most Vancouver date possible", author:"mikaela_v", initials:"MK", avBg:"rgba(245,200,66,0.18)", avColor:"#f5c842", city:"Vancouver", vibe:"☕ Chill & Cozy", food:"🍣 Japanese", budget:"$30–$70", rating:"4.9", likes:98, isGoogle:false,
+    colors:["linear-gradient(135deg,#a7f3d0 0%,#d1fae5 60%,#ecfdf5 100%)","linear-gradient(135deg,#bbf7d0 0%,#dcfce7 60%,#f0fdf4 100%)","linear-gradient(135deg,#0d2020,#081515,#2dd4bf15)"],
+    heights:[180,160,145],
+    course:[{n:"Granville Island",t:"Explore",c:"#4ade80"},{n:"Miku Restaurant",t:"Dinner",c:"#4ade80"},{n:"Seawall stroll",t:"Walk",c:"#4ade80"},{n:"Earnest Ice Cream",t:"Dessert",c:"#4ade80"}],
+    body:`<p>My boyfriend thinks I spent hours planning this. I did not. I spent four minutes on Whereto.</p><p>Picked Chill + Japanese + walking distance and the app gave me this exact course. We started at Granville Island around 5pm — just walked around, grabbed snacks from the market, watched the boats.</p><p>Then Miku for aburi sushi at sunset. If you haven't been — it's one of the best restaurants in Vancouver and the waterfront view at golden hour is absurd. We sat by the window and watched the light change the whole time we ate.</p><p>Seawall walk after to digest, then Earnest for ice cream. Simple, perfect, zero stress.</p>`,
+    comments:[{initials:"AR",bg:"rgba(251,146,60,0.2)",tc:"#fdba74",name:"alex_remi_mtl",time:"3 days ago",text:"Miku at sunset is genuinely one of the best experiences in Vancouver. Great pick."},{initials:"SJ",bg:"rgba(74,222,128,0.18)",tc:"#86efac",name:"sophie_j",time:"4 days ago",text:"The seawall walk after dinner is exactly the right move. Saving this!"}]
+  },
+  { id:2, title:"Old Montreal at night hits different when the course is right", author:"alex_remi_mtl", initials:"AR", avBg:"rgba(251,146,60,0.2)", avColor:"#fdba74", city:"Montreal", vibe:"🌹 Romantic", food:"🫒 Mediterranean", budget:"$70–$150", rating:"4.8", likes:76, isGoogle:true,
+    colors:["linear-gradient(135deg,#e9d5ff 0%,#f3e8ff 60%,#faf5ff 100%)","linear-gradient(135deg,#e9d5ff 0%,#f3e8ff 60%,#faf5ff 100%)","linear-gradient(135deg,#c4b5fd 0%,#ede9fe 60%,#f5f3ff 100%)"],
+    heights:[200,145,155],
+    course:[{n:"Garde Manger",t:"Dinner",c:"#a78bfa"},{n:"Le Lab Bar",t:"Cocktails",c:"#a78bfa"},{n:"Old Port stroll",t:"Walk",c:"#a78bfa"},{n:"Poutineville",t:"Late night",c:"#a78bfa"}],
+    body:`<p>We've lived in Montreal three years and somehow Whereto showed us places we'd walked past a hundred times but never tried.</p><p>Garde Manger was the highlight — Chuck Hughes' spot in Old Montreal. The seafood tower we ordered was borderline ridiculous in the best way. Service was warm, not stiff.</p><p>Le Lab cocktail bar after — down a narrow staircase into a basement that felt like a secret. The bartender knew every bottle. We stayed longer than planned.</p><p>Wandered the cobblestones, ended at Poutineville at midnight. Late-night poutine after a fancy dinner is the most Montreal thing ever and I regret nothing.</p>`,
+    comments:[{initials:"JL",bg:"rgba(22,163,74,0.25)",tc:"#93c5fd",name:"jay_and_lily",time:"5 days ago",text:"Garde Manger is so underrated on date night lists. Great shout."},{initials:"PR",bg:"rgba(244,114,182,0.2)",tc:"#f9a8d4",name:"priya_r",time:"6 days ago",text:"Old Montreal cobblestones at night are unbeatable. Saving this course!"}]
+  },
+  { id:3, title:"First date energy, adventurous vibe, under $60 total — and it worked", author:"sophie_j", initials:"SJ", avBg:"rgba(74,222,128,0.18)", avColor:"#86efac", city:"Toronto", vibe:"🧗 Adventurous", food:"🌮 Mexican", budget:"Under $30", rating:"4.7", likes:54, isGoogle:false,
+    colors:["linear-gradient(135deg,#fed7aa 0%,#ffedd5 60%,#fff7ed 100%)","linear-gradient(135deg,#fde68a 0%,#fef3c7 60%,#fffbeb 100%)","linear-gradient(135deg,#1a1505,#100e03,#eab30818)"],
+    heights:[170,130,150],
+    course:[{n:"La Carnita",t:"Tacos",c:"#fb923c"},{n:"Rec Room",t:"Games",c:"#fb923c"},{n:"Amsterdam BrewHouse",t:"Drinks",c:"#fb923c"},{n:"Harbourfront",t:"Stroll",c:"#fb923c"}],
+    body:`<p>Third date. We still hadn't figured out "our vibe" so I just picked Adventurous + Fun on Whereto and let it decide.</p><p>La Carnita for tacos first — fast, casual, zero pretension, genuinely delicious. The kind of place where you can relax immediately because there's no pressure.</p><p>Then Rec Room, which I know sounds like a weird date spot but it was perfect. We were competitive and laughing the whole time and it broke the ice in a way a sit-down restaurant never would have.</p><p>Beer at Amsterdam BrewHouse with the lake view, then walked along the Harbourfront as it got dark. Total for both of us: under sixty dollars. We've been together four months now. Just saying.</p>`,
+    comments:[{initials:"MK",bg:"rgba(245,200,66,0.18)",tc:"#f5c842",name:"mikaela_v",time:"1 week ago",text:"The Rec Room as a date spot is actually genius. Zero pressure and you learn so much about someone."},{initials:"TK",bg:"rgba(167,139,250,0.2)",tc:"#c4b5fd",name:"theo_k",time:"1 week ago",text:"Four months!! Love this. The budget is wild too."}]
+  },
+  { id:4, title:"Cultural date in Yorkville — ROM + rooftop bar + philosophers' walk", author:"theo_k", initials:"TK", avBg:"rgba(167,139,250,0.2)", avColor:"#c4b5fd", city:"Toronto", vibe:"🎨 Cultural", food:"🍷 Wine", budget:"$30–$70", rating:"4.9", likes:88, isGoogle:true,
+    colors:["linear-gradient(135deg,#c4b5fd 0%,#ede9fe 60%,#f5f3ff 100%)","linear-gradient(135deg,#bae6fd 0%,#e0f2fe 60%,#f0f9ff 100%)","linear-gradient(135deg,#c4b5fd 0%,#ede9fe 60%,#f5f3ff 100%)"],
+    heights:[190,140,160],
+    course:[{n:"Royal Ontario Museum",t:"Culture",c:"#a78bfa"},{n:"Sassafraz",t:"Dinner",c:"#a78bfa"},{n:"Pilot Rooftop",t:"Bar",c:"#a78bfa"},{n:"Philosophers' Walk",t:"Stroll",c:"#a78bfa"}],
+    body:`<p>We're both into art and neither of us had been to the ROM in years, so when Whereto suggested it for a Cultural vibe I didn't hesitate.</p><p>Two hours in the museum flew by — we kept stopping to argue about pieces in the best way. Had dinner at Sassafraz after, which always delivers. The patio was warm enough to sit outside.</p><p>Pilot rooftop for drinks — the hidden staircase that takes you up to this tiny rooftop nobody seems to know about. Then Philosophers' Walk, a ravine path through the U of T campus that is one of the best underrated night walks in the city.</p><p>The whole night cost about $110 for two people and felt like twice that.</p>`,
+    comments:[{initials:"SJ",bg:"rgba(74,222,128,0.18)",tc:"#86efac",name:"sophie_j",time:"3 days ago",text:"Philosophers' Walk at night is one of Toronto's best kept secrets. Gorgeous."},{initials:"JL",bg:"rgba(22,163,74,0.25)",tc:"#93c5fd",name:"jay_and_lily",time:"4 days ago",text:"The Pilot rooftop hidden staircase is such a vibe. Great spot to know."}]
+  },
+  { id:5, title:"Roncesvalles hidden gems — best pasta I've had outside Italy", author:"priya_r", initials:"PR", avBg:"rgba(244,114,182,0.2)", avColor:"#f9a8d4", city:"Toronto", vibe:"☕ Chill & Cozy", food:"🍝 Italian", budget:"$30–$70", rating:"5.0", likes:67, isGoogle:false,
+    colors:["linear-gradient(135deg,#fbcfe8 0%,#fce7f3 60%,#fdf2f8 100%)","linear-gradient(135deg,#f9a8d4 0%,#fce7f3 60%,#fdf2f8 100%)","linear-gradient(135deg,#fbcfe8 0%,#fce7f3 60%,#fdf2f8 100%)"],
+    heights:[210,145,135],
+    course:[{n:"Porzia",t:"Dinner",c:"#f472b6"},{n:"Reposado Bar",t:"Mezcal",c:"#f472b6"},{n:"Nadège Patisserie",t:"Dessert",c:"#f472b6"},{n:"High Park",t:"Night stroll",c:"#f472b6"}],
+    body:`<p>Whereto gave us the Hidden gems course and it's the best date I've been on in Toronto and I've lived here six years.</p><p>Porzia on Roncesvalles is tiny — maybe 30 seats — and every single thing we ordered was perfect. The handmade pasta tastes like someone's Italian grandmother made it. We were in no rush and neither were they.</p><p>Reposado mezcal bar after — an underground spot on Dundas with hundreds of agave spirits. Stayed longer than planned because the bartender started telling us the story behind every bottle.</p><p>Nadège for French pastries — their macarons genuinely rival anything I've had in Paris. Then walked through High Park to Grenadier Pond: still water, tree reflections, complete quiet. I didn't know this neighbourhood properly before this date. Whereto did.</p>`,
+    comments:[{initials:"AR",bg:"rgba(251,146,60,0.2)",tc:"#fdba74",name:"alex_remi_mtl",time:"2 days ago",text:"Reposado is such an underrated spot. That mezcal selection is genuinely impressive."},{initials:"MK",bg:"rgba(245,200,66,0.18)",tc:"#f5c842",name:"mikaela_v",time:"3 days ago",text:"Grenadier Pond at night sounds unreal. Adding this to my list!"}]
+  }
+];
+
+function renderGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = posts.map(p => `
+    <div class="grid-card" onclick="openPost(${p.id})">
+      <div class="card-thumb">
+        <div class="card-thumb-bg" style="background:${p.colors[0]};height:${p.heights[0]}px;"></div>
+        ${p.isGoogle ? `<div class="google-strip">🌐 Google Places photos</div>` : ''}
+      </div>
+      <div class="card-bottom">
+        <div class="card-title">${p.title}</div>
+        <div class="card-meta">
+          <div class="card-avatar" style="background:${p.avBg};color:${p.avColor};">${p.initials}</div>
+          <span class="card-author">${p.author}</span>
+          <span class="card-sep">•</span>
+          <span class="card-city">${p.city}</span>
+          <span class="card-likes">♥ ${p.likes}</span>
+        </div>
+        <span class="card-vibe">${p.vibe}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openPost(id) {
+  const p = posts[id];
+  document.getElementById('detailContent').innerHTML = `
+    <div class="d-hero" style="background:${p.colors[0]};"></div>
+    ${p.isGoogle
+      ? `<div class="d-google-notice">🌐 Photos sourced from Google Places — not uploaded by the author</div>`
+      : `<div style="margin-bottom:1.25rem;"></div>`}
+    <div class="d-photos-row">
+      <div class="d-photo-sm" style="background:${p.colors[1]};"></div>
+      <div class="d-photo-sm" style="background:${p.colors[2]};"></div>
+      <div class="d-photo-sm" style="background:${p.colors[0]};"></div>
+    </div>
+    <div class="d-author-row">
+      <div class="d-avatar" style="background:${p.avBg};color:${p.avColor};">${p.initials}</div>
+      <div>
+        <div class="d-name">${p.author}</div>
+        <div class="d-sub">${p.city} · ★ ${p.rating} · ${p.budget}</div>
+      </div>
+      <div class="d-tags">
+        <span class="dtag v">${p.vibe}</span>
+        <span class="dtag">${p.food}</span>
+      </div>
+    </div>
+    <div class="d-course">
+      <div class="d-course-label">Date course</div>
+      <div class="d-stops">
+        ${p.course.map((s,i) => `
+          <div class="d-stop-item">
+            <div class="d-dot" style="background:${s.c};"></div>
+            <span class="d-sname">${s.n}</span>
+            <span class="d-stype">(${s.t})</span>
+            ${i < p.course.length-1 ? '<span class="d-arrow">→</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="d-title">${p.title}</div>
+    <div class="d-body">${p.body}</div>
+    <div class="reactions">
+      <div class="reaction-row">
+        <button class="like-btn" id="lb-${id}" onclick="toggleLike(${id}, ${p.likes})">
+          ♥ <span id="lc-${id}">${p.likes}</span> likes
+        </button>
+        <button class="save-btn" id="sb-${id}" onclick="toggleSave(${id})">
+          🔖 Save this course
+        </button>
+        <span class="rating-pill">★ ${p.rating}</span>
+      </div>
+      <div class="comments-label">${p.comments.length} comments</div>
+      ${p.comments.map(c => `
+        <div class="comment">
+          <div class="c-av" style="background:${c.bg};color:${c.tc};">${c.initials}</div>
+          <div>
+            <div><span class="c-name">${c.name}</span><span class="c-time">${c.time}</span></div>
+            <div class="c-text">${c.text}</div>
+          </div>
+        </div>
+      `).join('')}
+      <div class="c-input-row">
+        <div class="c-input-av">You</div>
+        <div class="c-input-wrap">
+          <textarea class="c-textarea" rows="2" placeholder="Leave a comment..."></textarea>
+          <button class="c-submit">Post</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToGrid() {
+  document.getElementById('detailView').style.display = 'none';
+  document.getElementById('gridView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleLike(id, base) {
+  const btn = document.getElementById(`lb-${id}`);
+  const cnt = document.getElementById(`lc-${id}`);
+  const liked = btn.classList.toggle('liked');
+  cnt.textContent = liked ? base + 1 : base;
+}
+
+function toggleSave(id) {
+  const btn = document.getElementById(`sb-${id}`);
+  btn.classList.toggle('saved');
+  btn.textContent = btn.classList.contains('saved') ? '🔖 Saved!' : '🔖 Save this course';
+}
+
+function setF(el) {
+  document.querySelectorAll('.fc').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function showShareModal() { document.getElementById('shareModal').style.display = 'flex'; }
+function hideShareModal() { document.getElementById('shareModal').style.display = 'none'; }
+
+renderGrid();
+</script>
+</body>
+</html>

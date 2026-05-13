@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whereto — What's your budget?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --navy: #f2faf4;
+    --navy-mid: #ffffff;
+    --navy-light: #dcfce7;
+    --blue-accent: #16a34a;
+    --blue-glow: #22c55e;
+    --gold: #d97706;
+    --white: #14532d;
+    --muted: #6b9e7a;
+    --card-bg: rgba(255,255,255,0.85);
+    --card-border: rgba(22,163,74,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(22,163,74,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,163,74,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: rgba(22,163,74,0.10); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: rgba(34,197,94,0.07); bottom: 5%; right: -60px; }
+
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2.5rem;
+    border-bottom: 1px solid rgba(22,163,74,0.15);
+    background: rgba(242,250,244,0.88);
+    backdrop-filter: blur(12px);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--white); letter-spacing: -0.02em; }
+  .logo-text span { color: var(--gold); }
+  .back-btn {
+    background: transparent; border: 1px solid rgba(22,163,74,0.15);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 99px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+  main {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .quiz-shell { width: 100%; max-width: 600px; animation: fadeUp 0.5s ease both; }
+
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; }
+  .progress-track { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--blue-accent); width: 100%; }
+  .progress-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+  .q-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-glow); font-weight: 500; margin-bottom: 0.6rem; }
+  .q-title { font-family: 'DM Serif Display', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -0.02em; line-height: 1.15; color: var(--white); margin-bottom: 0.6rem; }
+  .q-hint { font-size: 0.83rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.5; }
+
+  /* summary pill */
+  .summary-row { display: flex; align-items: center; gap: 10px; min-height: 28px; margin-bottom: 1.25rem; }
+  .summary-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(22,163,74,0.10); border: 0.5px solid rgba(34,197,94,0.3);
+    color: #93c5fd; font-size: 0.75rem; font-weight: 500;
+    padding: 3px 12px; border-radius: 99px; animation: popIn 0.2s ease;
+  }
+  .summary-empty { font-size: 0.75rem; color: var(--muted); opacity: 0.6; }
+
+  /* budget grid */
+  .budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+  .budget-card {
+    position: relative;
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 16px; padding: 1.4rem 1.25rem 1.25rem;
+    cursor: pointer; user-select: none; overflow: hidden;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .budget-card:hover { border-color: rgba(34,197,94,0.35); background: rgba(22,163,74,0.10); transform: translateY(-2px); }
+  .budget-card.selected { border-color: var(--blue-accent); background: rgba(22,163,74,0.10); }
+  .budget-card.selected.tier-value   { border-color: #34d399; background: rgba(52,211,153,0.09); }
+  .budget-card.selected.tier-mid     { border-color: var(--blue-glow); background: rgba(34,197,94,0.07); }
+  .budget-card.selected.tier-nice    { border-color: #a78bfa; background: rgba(167,139,250,0.1); }
+  .budget-card.selected.tier-splurge { border-color: var(--gold); background: rgba(245,200,66,0.08); }
+
+  .check-badge {
+    position: absolute; top: 10px; right: 10px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--blue-accent);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .budget-card.selected .check-badge { opacity: 1; transform: scale(1); }
+  .tier-value.selected   .check-badge { background: #34d399; }
+  .tier-mid.selected     .check-badge { background: var(--blue-glow); }
+  .tier-nice.selected    .check-badge { background: #a78bfa; }
+  .tier-splurge.selected .check-badge { background: var(--gold); }
+  .check-badge svg { width: 10px; height: 10px; }
+
+  .popular-badge {
+    display: inline-block; font-size: 0.62rem; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    background: rgba(34,197,94,0.07); border: 0.5px solid rgba(34,197,94,0.3);
+    color: #93c5fd; padding: 2px 8px; border-radius: 99px; margin-bottom: 8px;
+  }
+
+  .budget-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; color: var(--white); letter-spacing: -0.02em;
+    margin-bottom: 4px; line-height: 1; transition: color 0.2s;
+  }
+  .tier-value.selected   .budget-price { color: #34d399; }
+  .tier-mid.selected     .budget-price { color: #93c5fd; }
+  .tier-nice.selected    .budget-price { color: #c4b5fd; }
+  .tier-splurge.selected .budget-price { color: var(--gold); }
+
+  .budget-label { font-size: 0.85rem; font-weight: 500; color: var(--white); margin-bottom: 4px; }
+  .budget-desc  { font-size: 0.73rem; color: var(--muted); line-height: 1.45; }
+
+  .budget-examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .ex-tag {
+    font-size: 0.67rem; padding: 2px 8px; border-radius: 99px;
+    border: 1px solid rgba(22,163,74,0.15); color: var(--muted);
+  }
+
+  /* custom slider */
+  .custom-wrap {
+    background: var(--card-bg); border: 1px solid rgba(22,163,74,0.15);
+    border-radius: 16px; padding: 1.25rem 1.5rem;
+    margin-top: 10px; margin-bottom: 1.75rem;
+    transition: border-color 0.2s;
+  }
+  .custom-wrap.active { border-color: rgba(34,197,94,0.4); }
+
+  .custom-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
+  .custom-label { font-size: 0.8rem; color: var(--muted); }
+  .custom-value { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--white); letter-spacing: -0.02em; }
+
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    border-radius: 99px; outline: none; border: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--blue-accent);
+    border: 2px solid var(--navy); cursor: pointer;
+    transition: transform 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .range-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.7rem; color: var(--muted); }
+
+  /* finish button */
+  .finish-btn {
+    width: 100%; background: var(--blue-accent);
+    color: #fff; border: none; padding: 0.9rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .finish-btn:hover:not(:disabled) { background: var(--blue-glow); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(22,163,74,0.35); }
+  .finish-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 480px) { .budget-grid { grid-template-columns: 1fr; } nav { padding: 1rem 1.25rem; } }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<nav>
+  <a class="logo" href="whereto.html">
+    <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+      <path d="M17 2C11.477 2 7 6.693 7 12.4C7 20.15 17 32 17 32C17 32 27 20.15 27 12.4C27 6.693 22.523 2 17 2Z" fill="#16a34a"/>
+      <circle cx="17" cy="12" r="8" fill="#dcfce7"/>
+      <rect x="15.5" y="7" width="3" height="6" rx="1.5" fill="#d97706"/>
+      <rect x="15.5" y="15" width="3" height="3" rx="1.5" fill="#d97706"/>
+    </svg>
+    <span class="logo-text">Where<span>to</span></span>
+  </a>
+  <button class="back-btn" onclick="window.history.back()">← Back</button>
+</nav>
+
+<main>
+  <div class="quiz-shell">
+
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <span class="progress-label">Step 5 of 5</span>
+    </div>
+
+    <div class="q-eyebrow">Last question</div>
+    <h1 class="q-title">What's the budget?</h1>
+    <p class="q-hint">Per person, for the whole evening. We'll match places to your range.</p>
+
+    <div class="summary-row" id="summaryRow">
+      <span class="summary-empty">No budget selected yet</span>
+    </div>
+
+    <div class="budget-grid">
+
+      <div class="budget-card tier-value" onclick="selectTier(this, 'value')">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="budget-price">$20–40</div>
+        <div class="budget-label">Casual</div>
+        <div class="budget-desc">Wallet-friendly without skimping on fun.</div>
+        <div class="budget-examples">
+          <span class="ex-tag">Ramen spot</span>
+          <span class="ex-tag">Bubble tea</span>
+          <span class="ex-tag">Beer garden</span>
+        </div>
+      </div>
+
+      <div class="budget-card tier-mid" onclick="selectTier(this, 'mid')">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="popular-badge">Most popular</div>
+        <div class="budget-price">$40–80</div>
+        <div class="budget-label">Comfortable</div>
+        <div class="budget-desc">A proper date night without overthinking it.</div>
+        <div class="budget-examples">
+          <span class="ex-tag">Nice restaurant</span>
+          <span class="ex-tag">Cocktail bar</span>
+          <span class="ex-tag">Café dessert</span>
+        </div>
+      </div>
+
+      <div class="budget-card tier-nice" onclick="selectTier(this, 'nice')">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="budget-price">$80–150</div>
+        <div class="budget-label">Treat yourself</div>
+        <div class="budget-desc">A step up — great food, great atmosphere.</div>
+        <div class="budget-examples">
+          <span class="ex-tag">Tasting menu</span>
+          <span class="ex-tag">Wine bar</span>
+          <span class="ex-tag">Rooftop spot</span>
+        </div>
+      </div>
+
+      <div class="budget-card tier-splurge" onclick="selectTier(this, 'splurge')">
+        <div class="check-badge"><svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="budget-price">$150+</div>
+        <div class="budget-label">Splurge</div>
+        <div class="budget-desc">Make it a night to remember. Go all out.</div>
+        <div class="budget-examples">
+          <span class="ex-tag">Fine dining</span>
+          <span class="ex-tag">Private experience</span>
+          <span class="ex-tag">Luxury bar</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- custom slider -->
+    <div class="custom-wrap" id="customWrap">
+      <div class="custom-header">
+        <span class="custom-label">Or set a custom amount per person</span>
+        <span class="custom-value" id="customDisplay">$60</span>
+      </div>
+      <input
+        type="range" min="10" max="300" step="5" value="60"
+        id="customSlider"
+        oninput="onSlider(this.value)"
+        style="background: linear-gradient(to right, #2563eb 17%, rgba(255,255,255,0.12) 17%);"
+      />
+      <div class="range-labels"><span>$10</span><span>$300+</span></div>
+    </div>
+
+    <button class="finish-btn" id="finishBtn" disabled onclick="goFinish()">
+      <span id="finishLabel">Set a budget to continue</span>
+      <span id="finishArrow" style="display:none;">✦ Build my date plan</span>
+    </button>
+
+  </div>
+</main>
+
+<script>
+  let selectedTierEl = null;
+  let tierId = null;
+  let customActive = false;
+  let customVal = 60;
+
+  const tierLabels = {
+    value: '$20–40 per person',
+    mid: '$40–80 per person',
+    nice: '$80–150 per person',
+    splurge: '$150+ per person'
+  };
+
+  function selectTier(card, id) {
+    if (selectedTierEl) selectedTierEl.classList.remove('selected');
+
+    if (tierId === id) {
+      selectedTierEl = null;
+      tierId = null;
+    } else {
+      selectedTierEl = card;
+      tierId = id;
+      card.classList.add('selected');
+    }
+    customActive = false;
+    document.getElementById('customWrap').classList.remove('active');
+    updateSummary();
+    updateBtn();
+  }
+
+  function onSlider(val) {
+    customVal = parseInt(val);
+    const display = customVal >= 300 ? '$300+' : `$${customVal}`;
+    document.getElementById('customDisplay').textContent = display;
+
+    const pct = Math.round(((customVal - 10) / 290) * 100);
+    document.getElementById('customSlider').style.background =
+      `linear-gradient(to right, #2563eb ${pct}%, rgba(255,255,255,0.12) ${pct}%)`;
+
+    if (selectedTierEl) selectedTierEl.classList.remove('selected');
+    selectedTierEl = null;
+    tierId = null;
+    customActive = true;
+    document.getElementById('customWrap').classList.add('active');
+
+    updateSummary();
+    updateBtn();
+  }
+
+  function updateSummary() {
+    const row = document.getElementById('summaryRow');
+    if (!tierId && !customActive) {
+      row.innerHTML = '<span class="summary-empty">No budget selected yet</span>';
+      return;
+    }
+    const text = customActive
+      ? (customVal >= 300 ? '$300+ per person' : `$${customVal} per person`)
+      : tierLabels[tierId];
+    row.innerHTML = `<span class="summary-pill">✦ ${text}</span>`;
+  }
+
+  function updateBtn() {
+    const ready = !!tierId || customActive;
+    const btn = document.getElementById('finishBtn');
+    const label = document.getElementById('finishLabel');
+    const arrow = document.getElementById('finishArrow');
+    btn.disabled = !ready;
+    label.style.display = ready ? 'none' : 'inline';
+    arrow.style.display = ready ? 'inline' : 'none';
+  }
+
+  function goFinish() {
+    const budget = customActive
+      ? { type: 'custom', value: customVal }
+      : { type: tierId };
+    sessionStorage.setItem('budget', JSON.stringify(budget));
+    alert('🎉 Quiz complete!\n\nAll 5 answers saved:\n• Vibe\n• Location & transport\n• Cuisine\n• After dinner\n• Budget\n\nNext up: generating your date plan on the map!');
+  }
+</script>
+</body>
+</html>
